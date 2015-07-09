@@ -356,6 +356,13 @@ class ShowUnit (webapp2.RequestHandler):
             if ENABLE_HOSTED_EXTENSIONS:
                 items.append("'{0}' is mentioned in extension layer: <a href='?ext={1}'>{2}</a>".format( node.id, l, l ))
 
+        # Look for noted external extension terms on this term. Initially seeAlsos.
+
+        if node.getExtext() != None:
+            xxt_url = node.getExtext()['seeAlso']
+            items.append("'{0}' has a related external term: <a href='{1}'>{2}</a>".format (node.id, xxt_url, xxt_url) )
+
+
         moreinfo = """<div>
         <div id='infobox' style='text-align: right;'><b><span style="cursor: pointer;">[more...]</span></b></div>
         <div id='infomsg' style='display: none; background-color: #EEEEEE; text-align: left; padding: 0.5em;'>

@@ -105,6 +105,7 @@ class Unit ():
         self.examples = []
         self.usage = 0
         self.subtypes = None
+        self.extext = {}
 
     def __str__(self):
         return self.id
@@ -114,6 +115,10 @@ class Unit ():
 
     def setUsage(self, count):
         self.usage = count
+
+    def getExtext(self):
+        return self.extext
+
 
     @staticmethod
     def GetUnit (id, createp=False):
@@ -735,15 +740,15 @@ def read_schemas(loadExtensions=False):
         items = parser.parse(file_paths, "core")
 
         if loadExtensions:
-            log.info("(re)scanning for extensions.")
+            log.info("(re)scanning for hosted extensions in data/ext/")
             extfiles = glob.glob("data/ext/*/*.rdfa")
-            log.info("Extensions found: %s ." % " , ".join(extfiles) )
+            log.info("Hosted Extensions found: %s ." % " , ".join(extfiles) )
             fnstrip_re = re.compile("\/.*")
             for ext in extfiles:
                 ext_file_path = full_path(ext)
                 extid = ext.replace('data/ext/', '')
                 extid = re.sub(fnstrip_re,'',extid)
-                log.info("Preparing to parse extension data: %s as '%s'" % (ext_file_path, "%s" % extid))
+                log.info("Preparing to parse hosted extension data: %s as '%s'" % (ext_file_path, "%s" % extid))
                 parser = parsers.MakeParserOfType('rdfa', None)
                 all_layers[extid] = "1"
                 extitems = parser.parse([ext_file_path], layer="%s" % extid) # put schema triples in a layer
@@ -752,6 +757,34 @@ def read_schemas(loadExtensions=False):
                     if x is not None:
                         log.debug("%s:%s" % ( extid, str(x.id) ))
                 # e.g. see 'data/ext/bib/bibdemo.rdfa'
+
+            log.info("(re)scanning for external extensions in data/ext/ext/")
+            extfiles = glob.glob("data/extext/*/*.csv")
+            log.info("External Extensions found: %s ." % " , ".join(extfiles) )
+            fnstrip_re = re.compile("\/.*")
+            for ext in extfiles:
+                ext_file_path = full_path(ext)
+                extid = ext.replace('data/extext/', '')
+                extid = re.sub(fnstrip_re,'',extid)
+                log.info("Preparing to parse external extension mapping file: %s as '%s'" % (ext_file_path, "%s" % extid))
+                log.info("TODO: CSV parser for extext/*/*.csv files.")
+                # CSV rows have pairs of external term and schema.org term
+                # all_layers[extid] = "1"
+                import csv
+
+                with open(ext_file_path, 'rb') as csvfile:
+                    xxreader = csv.reader(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
+                    for row in xxreader:
+                        external_term = row[0].strip()
+                        our_term = row[1].strip().replace('http://schema.org/', '')
+                        log.info("TODO ROW: %s -> %s " % (our_term, external_term) )
+                        ot = Unit.GetUnit(our_term)
+                        if ot != None:
+                            log.info("Stored extext called '%s' term '%s' for '%s'" % (extid, external_term, our_term))
+                            ot.getExtext()['seeAlso'] = external_term
+                                        # TODO: fix to allow several (grouped by extext ID)
+                        else:
+                            log.info("TODO: no term found for ''%s'" % our_term)
 
         files = glob.glob("data/*examples.txt")
         example_contents = []
