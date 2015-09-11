@@ -1,6 +1,7 @@
 #application: schemaorgae
 #application: webschemas
-application: sdo-phobos
+#application: sdo-exhibition
+application: sdo-wip1
 
 version: 1
 runtime: python27
