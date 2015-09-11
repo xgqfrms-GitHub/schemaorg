@@ -3293,6 +3293,18 @@
        <span>Subclass of: <a property="rdfs:subClassOf" href="http://schema.org/Event">Event</a></span>
     </div>
 
+    <!-- https://github.com/schemaorg/schemaorg/issues/445 -->
+    <div typeof="rdfs:Class" resource="http://schema.org/ExhibitionEvent">
+      <span class="h" property="rdfs:label">ExhibitionEvent</span>
+      <span property="rdfs:comment">Event type: Exhibition event, e.g. at a museum, library, archive.
+
+      TODOs: 1. Relationship to creative work(s), itemlist of things the exhibition is about.
+      2. commercial exhibitions? permanent exhibitions? scoping issues.
+      3. examples needed. see https://github.com/schemaorg/schemaorg/issues/445
+      </span>
+       <span>Subclass of: <a property="rdfs:subClassOf" href="http://schema.org/Event">Event</a></span>
+    </div>
+
     <div typeof="rdfs:Class" resource="http://schema.org/Volcano">
       <span class="h" property="rdfs:label">Volcano</span>
       <span property="rdfs:comment">A volcano, like Fuji san.</span>
