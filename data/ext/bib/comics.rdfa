@@ -22,7 +22,12 @@
 
 <p vocab="http://schema.org/" prefix="bib: http://bib.schema.org/" >Default vocabulary prefix: 'bib:'</p>
 <p>
-<span property="schema:softwareVersion">bib extension - version 0.1</span>
+<link property="http://schema.org/isPartOf" href="http://schema.org" />
+<span property="schema:name">Bibliographic Extension for Comics</span>
+<span property="schema:description">The Bibliographic Extension for Comics within <a href="http://schema.org/">schema.org</a>.
+It defines terms such as <a href="/ComicStory">ComicStory</a>.<br/>
+ For more details see the W3C BibExtend Community Group's <a href="http://www.w3.org/community/schemabibex/wiki/Bib.schema.org-1.0">wiki</a>.</span>
+<span property="schema:softwareVersion">Bib Extension - Comics: version 0.1</span>
 </p>
 <hr/>
 <h2>Types</h2>

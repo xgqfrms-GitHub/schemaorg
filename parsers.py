@@ -118,7 +118,7 @@ class RDFAParser :
     def __init__ (self, webapp):
         self.webapp = webapp
 
-    def parse (self, files, layer="core"):
+    def parse (self, files, layer="core", defterms=[]):
         self.items = {}
         root = []
         for i in range(len(files)):
@@ -126,16 +126,35 @@ class RDFAParser :
             parser = ET.XMLParser(encoding="utf-8")
             tree = ET.parse(files[i], parser=parser)
             root.append(tree.getroot())
+            
+            logging.info("File: %s %s" % (layer, files[i]))
 
-            pre = root[i].findall(".//*[@prefix]")
-            for e in range(len(pre)):
-                api.Unit.storePrefix(pre[e].get('prefix'))
+            self.extractLayerInfo(layer, defterms, files[i], root[i])
 
         for i in range(len(root)):
               self.extractTriples(root[i], None, layer)
 
 
         return self.items.keys()
+        
+    def extractLayerInfo(self, layer, terms, file, tree):
+        
+        pre = tree.findall(".//*[@prefix]")
+        for e in pre:
+            val = e.get('prefix')
+            val = val.replace(" ","")
+            api.storeLayerInfo(layer, "prefix", val)
+        
+        for term in terms:
+            sel = ".//*[@property='%s']" % term
+            elems = tree.findall(sel)
+            for e in elems:
+#logging.info("file: %s layer: %s term: %s val:%s" % (file, layer, term, e.text))
+                api.storeLayerInfo(layer, term, ET.tostring(e))
+                
+                #fred (e.text or '') + ''.join(map(ET.tostring, e)) + (e.tail or '')
+                #logging.info("ZZZZZZZZZZZZ: %s" % fred)
+        
 
     def stripID (self, str) :
         if (len(str) > 16 and (str[:17] == 'http://schema.org')) :

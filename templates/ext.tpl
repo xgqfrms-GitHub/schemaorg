@@ -7,7 +7,10 @@
 For more details, see the <a href="http://{{ mybasehost }}:{{ myport }}/">homepage</a>.
 
 </p>
-<p>This is the front page for the <em>{{name}}</em>, whose short name is: <code>{{ abbrev }}</code></p>
+<p>This is the home page for the <em>{{name}}</em>, whose short name is: <code>{{ abbrev }}</code></p>
+
+Vocabulary version: {{vocabVersion}}
+<br/>
 </div>
 
 {%- endmacro %}

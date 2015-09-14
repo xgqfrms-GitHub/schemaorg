@@ -27,6 +27,8 @@ sitename = "schema.org"
 sitemode = "mainsite" # whitespaced list for CSS tags,
             # e.g. "mainsite testsite", "extensionsite" when off expected domains
 
+LAYERVALUES = ["schema:softwareVersion", "schema:description", "schema:name"]
+
 DYNALOAD = True # permits read_schemas to be re-invoked live.
 #JINJA_ENVIRONMENT = jinja2.Environment(
 #   loader=jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')),
@@ -234,15 +236,6 @@ class Unit ():
 
       return False
 
-
-
-    @staticmethod
-    def storePrefix(prefix):
-        """Stores the prefix declaration for a given class or property"""
-        # Currently defined just to let the tests pass
-        pass
-
-    # e.g. <http://schema.org/actors> <http://schema.org/supersededBy> <http://schema.org/actor> .
 
     def superseded(self, layers='core'):
         """Has this property been superseded? (i.e. deprecated/archaic), in any of these layers."""
@@ -684,6 +677,35 @@ def inLayer(layerlist, node):
         return True
     log.debug("inLayer: Failed to find in %s for %s" % (layerlist, node.id))
     return False
+    
+def storeLayerInfo(layer,term,value):
+    #"""Stores the prefix declaration for a given class or property"""
+    log.info("storeLayerInfo: %s %s %s" % (layer,term,value))
+    key = "LAYERINFO:%s" % layer
+    lInf = DataCache.get(key,"core")
+    if not lInf:
+        lInf = {}
+        DataCache.put(key,lInf,"core")
+    trm = lInf.get(term)
+    if not trm:
+        trm = []
+        lInf[term] = trm
+    if not value in trm:
+        trm.append(value)
+        
+def getLayerInfo(layer,term):
+    log.info("getLayerInfo: %s %s" % (layer,term))
+    key = "LAYERINFO:%s" % layer
+    lInf = DataCache.get(key,"core")
+    if lInf:
+        trm = lInf.get(term)
+        log.info("trm %s" % trm)
+        if trm:
+            return trm
+    return []
+        
+    
+        
 
 def read_file (filename):
     """Read a file from disk, return it as a single string."""
@@ -745,7 +767,7 @@ def read_schemas(loadExtensions=False):
         for f in files:
             file_paths.append(full_path(f))
         parser = parsers.MakeParserOfType('rdfa', None)
-        items = parser.parse(file_paths, "core")
+        items = parser.parse(file_paths, "core", defterms=LAYERVALUES)
 
 #set default home for those in core that do not have one
         setHomeValues(items,"core",True)
@@ -786,7 +808,7 @@ def read_extensions(extensions):
             log.info("Preparing to parse extension data: %s as '%s'" % (ext_file_path, "%s" % extid))
             parser = parsers.MakeParserOfType('rdfa', None)
             all_layers[extid] = "1"
-            extitems = parser.parse([ext_file_path], layer="%s" % extid) # put schema triples in a layer
+            extitems = parser.parse([ext_file_path], layer="%s" % extid, defterms=LAYERVALUES) # put schema triples in a layer
             setHomeValues(extitems,extid,False)
 
         read_examples(expfiles)

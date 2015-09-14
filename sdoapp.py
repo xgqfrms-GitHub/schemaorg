@@ -22,7 +22,7 @@ from api import inLayer, read_file, full_path, read_schemas, read_extensions, re
 from api import Unit, GetTargets, GetSources
 from api import GetComment, all_terms, GetAllTypes, GetAllProperties
 from api import GetParentList, GetImmediateSubtypes, HasMultipleBaseTypes
-from api import GetJsonLdContext
+from api import GetJsonLdContext, getLayerInfo
 
 logging.basicConfig(level=logging.INFO) # dev_appserver.py --log_level debug .
 log = logging.getLogger(__name__)
@@ -867,9 +867,11 @@ class ShowUnit (webapp2.RequestHandler):
                     'mybasehost': getBaseHost(),
                     'host_ext': getHostExt(),
                     'home_page': "True",
+                    'vocabVersion': getLayerInfo(getHostExt(),"schema:softwareVersion"),
                     'debugging': getAppVar('debugging')
                 }
 
+                log.info("XXXXXXXXXX %s %s" % (getHostExt(),getLayerInfo(getHostExt(),"schema:softwareVersion")))
                 # We don't want JINJA2 doing any cachine of included sub-templates.
 
                 page = template.render(template_values)
@@ -1482,7 +1484,9 @@ class ShowUnit (webapp2.RequestHandler):
         if test == "":
             hostString = self.request.host
             
-        scheme = self.request.scheme
+        scheme = "http" #Defalt for tests
+        if not getInTestHarness():  #Get the actual scheme from the request
+            scheme = self.request.scheme
 
         host_ext = re.match( r'([\w\-_]+)[\.:]?', hostString).group(1)
         log.info("setupHostinfo: scheme=%s hoststring=%s host_ext?=%s" % (scheme, hostString, str(host_ext) ))
