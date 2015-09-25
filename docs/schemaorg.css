@@ -409,86 +409,72 @@ input.gsc-search-button {
   display: none;
 }
 
-/* example tab selection */
-.ds-selector-tabs {
-  padding-bottom: 2em;
-}
-.ds-selector-tabs .selectors {
-  padding: 0;
-  border-bottom: 1px solid #ccc;
-  height: 28px;
-}
-.ds-selector-tabs .selectors a {
-  display: inline-block;
-  min-width: 54px;
-  text-align: center;
-  font-size: 11px;
-  font-weight: bold;
-  height: 27px;
-  padding: 0 8px;
-  line-height: 27px;
-  transition: all,0.218s;
-  border-top-right-radius: 2px;
-  border-top-left-radius: 2px;
-  color: #666;
-  border: 1px solid transparent;
-}
-.ds-selector-tabs .selectors a:first-child {
-  margin-left: 2px;
-}
-.ds-selector-tabs .selectors a.selected {
-  color: #202020 !important;
-  border: 1px solid #ccc;
-  border-bottom: 1px solid #fff !important;
-}
-#mainContent .ds-selector-tabs .selectors a:hover {
-  background-color: transparent;
-  color: #202020;
-  cursor: pointer;
-}
-.ds-selector-tabs pre {
-  display: none;
-}
-.ds-selector-tabs pre.selected {
-  display: block;
-}
-
 /* Extension links */
-a.ext:link {
+a.ext:link,
+.typetree a.ext:link {
    color: #0000aa !important;
-   border-bottom: dotted 1px #0000aa !important;
+   border-bottom: dotted 1px #0000aa ;
    text-decoration: none;
 }
-a.ext:visited {
+a.ext:visited,
+.typetree a.ext:visited {
    color: #0000cc !important;
-   border-bottom: dotted 1px #0000cc !important;
+   border-bottom: dotted 1px #0000cc ;
    text-decoration: none;
 }
-a.ext:hover {
+a.ext:hover,
+.typetree a.ext:hover {
    color: #fff !important;
    background-color: #0000cc;
    text-decoration: none;
 }
 
-/* Bib extension links overriding default 'ext' values
-a.ext.ext-bib:link{
-   color: #009900 !important;
-   border-bottom: dotted 1px #009900;
-   text-decoration: none;
+.typetree a:link
+{
+color: #990000;
+text-decoration: none;
+border-bottom: 0px;
 }
-a.ext.ext-bib:visited {
-   color: #00bb00 !important;
-   border-bottom: dotted 1px #00bb00;
-   text-decoration: none;
+.typetree a:visited
+{
+color: #aa0000;
+text-decoration: none;
+border-bottom: 0px;
 }
-a.ext.ext-bib:hover {
-   color: #fff !important;
-   background-color: #00bb00;
-   text-decoration: none;
+.typetree a:hover
+{
+border-bottom: none;
+color: #fff;
+background-color: #990000;
+text-decoration: none;
 }
-*/
 
+/* example tab selection */
 
+#examplesdiv {
+	font-size: 75%;
+}
+#examplesdiv .ui-tabs-anchor{
+    border-bottom: 0px !important;
+}
+
+#examplesdiv .ui-state-hover .ui-tabs-anchor{
+    color: #fff;
+    background-color: #C7CBCE;
+}
+#examplesdiv .exampleid {
+	text-align: right;
+	line-height: 1.2em;
+	color: #C7CBCE;
+	display: none;
+}
+#examplesdiv .examplecontent {
+	padding-top: 0;
+}
+
+.typetree .jstree-anchor {
+    border-bottom: 0px !important;	
+}
 
 .layerinfo {
     width: 100%; /* compatibility */

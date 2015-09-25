@@ -5,31 +5,67 @@
     <title>Full Hierarchy - {{ sitename }}</title>
     <meta name="description" content="Schema.org is a set of extensible schemas that enables webmasters to embed
     structured data on their web pages for use by search engines and other applications." />
-    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+	<link rel="stylesheet" href="/docs/themes/default/style.min.css" />
+	<script src="/docs/jstree.min.js"></script>    
     <link rel="stylesheet" type="text/css" href="/docs/schemaorg.css" />
 
 <script type="text/javascript">
 $(document).ready(function(){
-    $('input[type="radio"]').click(function(){
-        if($(this).attr("value")=="local"){
-            $("#full_thing_tree").hide();
-            $("#ext_thing_tree").hide();
-            $("#thing_tree").show(500);
-        }
-        if($(this).attr("value")=="full"){
-            $("#thing_tree").hide();
-            $("#ext_thing_tree").hide();
-            $("#full_thing_tree").show(500);
-        }
-        if($(this).attr("value")=="ext"){
-            $("#thing_tree").hide();
-            $("#full_thing_tree").hide();
-            $("#ext_thing_tree").show(500);
-        }
-     });
-	$("#full_thing_tree").hide();
-	$("#ext_thing_tree").hide();
-});
+		$('#thing_tree').jstree({"state" : { "key" : "thing_tree" }, plugins : [ "html_data", "state" ]});
+		$('#thing_tree').on('ready.jstree', function (e, data) {
+	    	$('#thing_tree').jstree("open_all");
+	    	$('#thing_tree').jstree("deselect_all");			
+		});			
+
+		$('#datatype_tree').jstree({"state" : { "key" : "datatype_tree" }, plugins : [ "html_data", "state"]});
+		$('#datatype_tree').on('ready.jstree', function (e, data) {
+	    	$('#datatype_tree').jstree("open_all");
+	    	$('#datatype_tree').jstree("deselect_all");			
+		});			
+
+		//$("#thing_tree .jstree-last .jstree-icon").first().hide();
+		//$("#datatype_tree .jstree-last .jstree-icon").first().hide();
+		
+		$('.typetree').on("activate_node.jstree", function (e, data) {
+			var href = data.node.a_attr.href;
+			document.location.href = href;
+			return false;
+		});
+
+		$("#thing_tree").on("after_open.jstree", checkState);
+ 	    $("#viewsel").on('change', checkState);
+		
+ 
+ });	
+ 
+ function checkState(){
+   var core = $("#coreCheck").is(':checked');
+   var ext = $("#extCheck").is(':checked');
+   var extsel = "";
+   $( "#extentions option:selected" ).each(function() {
+         extsel += $( this ).val() + " ";
+       });
+	   		
+	$("#thing_tree .sdorow").show();
+
+	var sel = "";
+	if(core && !ext){
+		sel = '.sdo-ext:not(.sdo-core)';			
+	}else if(!core && ext){
+		sel = '.sdo-core:not(.' + extsel + ')';
+	}else if(core && ext){
+		sel = ':not(.sdo-core):not(.' + extsel + ')';
+	}else if(!core && !sel){
+		sel = ':not(.sdorootrow)';
+	}
+
+	$("#thing_tree .sdorow" + sel).hide();
+	$('#thing_tree').jstree("redraw");	
+ }
+	
 </script>
 </head>
 <body style="text-align: left;">
@@ -51,27 +87,26 @@ Schema.org is defined as two hierarchies: one for textual property values, and o
 <br/>
 <div>Select vocabulary view:<br/>
     <div>
-        <label><input type="radio" name="viewSel" value="local" checked="checked"> {{local_button}}</label>
-        <label><input type="radio" name="viewSel" value="full"> {{full_button}}</label>
-		{% if ext_button != "" %}
-        	<label><input type="radio" name="viewSel" value="ext"> {{ext_button}}</label>
-		{% endif %}
+		<form id="viewsel">
+	        <label><input type="checkbox" id="coreCheck" checked="checked"> Core </label>
+	        <label><input type="checkbox" id="extCheck" checked="checked"> Extension </label>
+			<label><select id="extentions">
+				<option value="sdo-ext">All</option>
+{% for opt in selectopts %}
+				<option value="sdo-{{ opt }}">{{ opt }}.schema.org</option>
+{% endfor %}
+			</select>
+		</foem>
 	</div>
 </div>
+<br/>
 	
 
-<div id="thing_tree">
+<div class="typetree" id="thing_tree">
 {{ thing_tree | safe }}
 </div>
-<div class="display: none" id="full_thing_tree">
-{{ full_thing_tree | safe }}
-</div>
-{% if ext_button != "" %}
-	<div class="display: none" id="ext_thing_tree">
-	{{ ext_thing_tree | safe }}
-	</div>
-{% endif %}
-<div id="datatype_tree">
+<h4>Data Types</h4>
+<div class="typetree" id="datatype_tree">
 {{ datatype_tree | safe }}
 </div>
 

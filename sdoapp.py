@@ -143,8 +143,9 @@ class TypeHierarchyTree:
             # and we haven't been here before
             if node.id not in self.visited:
                 self.visited[node.id] = True # remember our visit
-                self.emit2buff(buff, ' %s<li class="tbranch" id="%s"><a %s %s href="%s%s%s">%s</a>%s' % (" " * 4 * depth, node.id,  tooltip, extclass, urlprefix, hashorslash, node.id, node.id, extflag) )
-                self.emit2buff(buff, ' %s<ul>' % (" " * 4 * depth))
+#                self.emit2buff(buff, ' %s<li class="tbranch" id="%s"><a %s %s href="%s%s%s">%s</a>%s' % (" " * 4 * depth, node.id,  tooltip, extclass, urlprefix, hashorslash, node.id, node.id, extflag) )
+                self.emit2buff(buff, '<li> <a href="#">%s%s</a> <ul>' % ( node.id, extflag) )
+#                self.emit2buff(buff, ' %s<ul>' % (" " * 4 * depth))
 
                 # handle our subtypes
                 for item in subTypes:
@@ -163,7 +164,8 @@ class TypeHierarchyTree:
         # leaf nodes
         if len(subTypes) == 0:
             if node.id not in self.visited:
-                self.emit2buff(buff, '%s<li class="tleaf" id="%s"><a %s %s href="%s%s%s">%s</a>%s%s' % (" " * depth, node.id, tooltip, extclass, urlprefix, hashorslash, node.id, node.id, extflag, "" ))
+#                self.emit2buff(buff, '%s<li class="tleaf" id="%s"><a %s %s href="%s%s%s">%s</a>%s%s' % (" " * depth, node.id, tooltip, extclass, urlprefix, hashorslash, node.id, node.id, extflag, "" ))
+                self.emit2buff(buff, '<li><a href="#">%s%s</a>' % (node.id, extflag))
             #else:
                 #self.visited[node.id] = True # never...
                 # we tolerate "VideoGame" appearing under both Game and SoftwareApplication
@@ -171,6 +173,81 @@ class TypeHierarchyTree:
 
         self.emit2buff(buff, ' %s</li>' % (" " * 4 * depth) )
         
+        if localBuff:
+            self.emit(buff.getvalue())
+            buff.close()
+        
+        return gotOutput
+
+    def traverseForHTML2(self, node, depth = 1, hashorslash="/", layers='core', buff=None):
+
+        """Generate a hierarchical tree view of the types. hashorslash is used for relative link prefixing."""
+
+        log.debug("traverseForHTML: node=%s hashorslash=%s" % ( node.id, hashorslash ))
+        gotOutput = []
+        localBuff = False
+        if buff == None:
+            localBuff = True
+            buff = StringIO.StringIO()
+       
+        urlprefix = ""
+        home = node.getHomeLayer()
+        if home in layers:
+            gotOutput = [home]
+        else:
+            return gotOutput
+
+        if home in ENABLED_EXTENSIONS and home != getHostExt():
+            urlprefix = makeUrl(home)
+
+        extclass = ""
+        extflag = ""
+        tooltip=""
+        visitedBefore = True
+        visitedFlag = "+"
+        if home != "core" and home != "":
+            gotOutput.append('ext')
+            extclass = "class=\"ext ext-%s\"" % home
+            extflag = EXTENSION_SUFFIX
+            tooltip = "title=\"Extended schema: %s.schema.org\" " % home
+
+        if node.id not in self.visited:
+            visitedBefore = False
+            visitedFlag = ""
+            self.visited[node.id] = True # remember our visit
+
+#Start row & output this node
+
+        # Are we are a supertype of some kind
+        subContent = ""
+        subTypes = node.GetImmediateSubtypes(layers=ALL_LAYERS)
+        if len(subTypes) > 0 and not visitedBefore: 
+        # Yes - we have children & have not been referenced before
+                # handle our subtypes
+                for item in subTypes:
+                    subBuff = StringIO.StringIO()
+                    self.emit2buff(subBuff,"\n<ul>")
+                    got = self.traverseForHTML2(item, depth + 1, hashorslash=hashorslash, layers=layers, buff=subBuff)
+                    self.emit2buff(subBuff,"\n</ul>")
+                    if len(got) > 0:
+                        for g in got:
+                            if g not in gotOutput:
+                                gotOutput.append(g)
+                        subContent += subBuff.getvalue()
+                    subBuff.close()
+        identClass = 'class="sdorow'
+        if localBuff:
+            identClass += " sdorootrow"
+        for i in gotOutput:
+            identClass += " sdo-%s" % i
+        identClass +='" '
+#build this node
+        self.emit2buff(buff, '<li %s> <a %s %s href="%s%s%s">%s%s</a> ' % ( identClass,tooltip, extclass, urlprefix, hashorslash, node.id, node.id, visitedFlag) )
+        if len(subContent) > 0:
+            self.emit2buff(buff, subContent)
+        self.emit2buff(buff, '\n</li>')
+        
+#If we created our own buff need to output it - (first call)
         if localBuff:
             self.emit(buff.getvalue())
             buff.close()
@@ -315,7 +392,7 @@ class ShowUnit (webapp2.RequestHandler):
 
         for l in all_terms[node.id]:
             l = l.replace("#","")
-            if ENABLE_HOSTED_EXTENSIONS:
+            if ENABLE_HOSTED_EXTENSIONS and l != 'core':
                 items.append("'{0}' is mentioned in extension layer: <a href='{1}'>{2}</a>".format( node.id, makeUrl(l,node.id), l ))
 
         moreinfo = """<div>
@@ -575,7 +652,7 @@ class ShowUnit (webapp2.RequestHandler):
                     out.write(" or <br/> ")
                 first_range = False
                 out.write(self.ml(r, prop='rangeIncludes'))
-                out.write("&nbsp;")
+                #out.write("&nbsp;")
             out.write("</td>")
             out.write("<td class=\"prop-desc\" property=\"rdfs:comment\">%s" % (comment))
             if (len(olderprops) > 0):
@@ -1107,20 +1184,32 @@ class ShowUnit (webapp2.RequestHandler):
               ('RDFa', 'rdfa', ''),
               ('JSON-LD', 'jsonld', ''),
             ]
-            self.write("<br/><br/><b><a id=\"examples\">Examples</a></b><br/><br/>\n\n")
+            self.write("<h4><a id=\"examples\">Examples</a></h4>\n\n")
+            
+            excount = 1
+            self.write("<div id=\"examplesdiv\">")
             for ex in examples:
+                id = excount
+                excount += 1    
                 if "id" in ex.egmeta:
-                    self.write('<span id="%s"></span>' % ex.egmeta["id"])
-                self.write("<div class='ds-selector-tabs ds-selector'>\n")
-                self.write("  <div class='selectors'>\n")
+                    id = ex.egmeta["id"]
+                    
+                self.write("<div class=\"extabs\" id=\"extabs-%s\">\n<ul>" % id)
                 for label, example_type, selected in example_labels:
-                    self.write("    <a data-selects='%s' class='%s'>%s</a>\n"
-                               % (example_type, selected, label))
-                self.write("</div>\n\n")
+                    self.write("<li><a href=\"#%s-%s\">%s</a></li>" % (id, example_type, label))
+                self.write("</ul>")
+                    
+                self.write("<div class=\"exampleid\" id=\"%s\">#%s</div>\n" % (id,id)) 
+                                                   
+                
                 for label, example_type, selected in example_labels:
-                    self.write("<pre class=\"prettyprint lang-html linenums %s %s\">%s</pre>\n\n"
-                               % (example_type, selected, self.rep(ex.get(example_type))))
-                self.write("</div>\n\n")
+                    self.write("<div class=\"examplecontent\" id=\"%s-%s\">" % (id, example_type))                   
+                    self.write("<pre class=\"prettyprint lang-html linenums %s\">%s</pre>\n\n"
+                               % (example_type, self.rep(ex.get(example_type))))
+                    self.write("</div>\n")
+                self.write("</div><br/>\n")
+            self.write("</div>")
+                    
 
         self.write("<p class=\"version\"><b>Schema Version %s</b></p>\n\n" % SCHEMA_VERSION)
         # TODO: add some version info regarding the extension
@@ -1235,77 +1324,24 @@ class ShowUnit (webapp2.RequestHandler):
             log.debug("Serving recycled FullTreePage.")
             return True
         else:
-            template = JINJA_ENVIRONMENT.get_template('full.tpl')
-
-
-            extlist=""
-            extonlylist=[]
-            count=0
-            for i in layerlist:
-                if i != "core":
-                    sep = ""
-                    if count > 0:
-                        sep = ", "
-                    extlist += "'%s'%s" % (i, sep)
-                    extonlylist.append(i)
-                    count += 1
-            local_button = ""
-            local_label = "<h3>Core plus %s extension vocabularies</h3>" % extlist
-            if count == 0:
-                local_button = "Core vocabulary"
-            elif count == 1:
-                local_button = "Core plus %s extension" % extlist
-            else:
-                local_button = "Core plus %s extensions" % extlist
-                
-            ext_button = ""
-            if count == 1:
-                ext_button = "Extension %s" % extlist
-            elif count > 1:
-                ext_button = "Extensions %s" % extlist
-                
+            template = JINJA_ENVIRONMENT.get_template('full.tpl')                
 
             uThing = Unit.GetUnit("Thing")
             uDataType = Unit.GetUnit("DataType")
 
-            mainroot = TypeHierarchyTree(local_label)
-            mainroot.traverseForHTML(uThing, layers=layerlist)
+            mainroot = TypeHierarchyTree("")
+            mainroot.traverseForHTML2(uThing, layers=ALL_LAYERS)
             thing_tree = mainroot.toHTML()
-            #az_enums = GetAllEnumerationValues(layerlist)
-            #az_enums.sort( key = lambda u: u.id)
-            #thing_tree += self.listTerms(az_enums,"<br/><strong>Enumeration Values</strong><br/>")
-            
 
-            fullmainroot = TypeHierarchyTree("<h3>Core plus all extension vocabularies</h3>")
-            fullmainroot.traverseForHTML(uThing, layers=ALL_LAYERS)
-            full_thing_tree = fullmainroot.toHTML()
-            #az_enums = GetAllEnumerationValues(ALL_LAYERS)
-            #az_enums.sort( key = lambda u: u.id)
-            #full_thing_tree += self.listTerms(az_enums,"<br/><strong>Enumeration Values</strong><br/>")
-            
-            ext_thing_tree = None
-            if len(extonlylist) > 0:
-                extroot = TypeHierarchyTree("<h3>Extension: %s</h3>" % extlist)
-                extroot.traverseForHTML(uThing, layers=extonlylist)
-                ext_thing_tree = extroot.toHTML()
-                #az_enums = GetAllEnumerationValues(extonlylist)
-                #az_enums.sort( key = lambda u: u.id)
-                #ext_thing_tree += self.listTerms(az_enums,"<br/><strong>Enumeration Values</strong><br/>")
-                
-
-            dtroot = TypeHierarchyTree("<h4>Data Types</h4>")
-            dtroot.traverseForHTML(uDataType, layers=layerlist)
+            dtroot = TypeHierarchyTree("")
+            dtroot.traverseForHTML2(uDataType, layers=layerlist)
             datatype_tree = dtroot.toHTML()
 
             full_button = "Core plus all extensions"
 
             page = template.render({ 'thing_tree': thing_tree,
-                                    'full_thing_tree': full_thing_tree,
-                                    'ext_thing_tree': ext_thing_tree,
                                     'datatype_tree': datatype_tree,
-                                    'local_button': local_button,
-                                    'full_button': full_button,
-                                    'ext_button': ext_button,
+                                    'selectopts': sorted(ENABLED_EXTENSIONS),
                                     'sitename': getSiteName(),
                                     'staticPath': makeUrl("",""),
                                     'menu_sel': "Schemas"})
@@ -1425,6 +1461,7 @@ class ShowUnit (webapp2.RequestHandler):
         """Deal with a request for a full release summary page. Lists all terms and their descriptions inline in one long page.
         version/latest/ is from current schemas, others will need to be loaded and emitted from stored HTML snapshots (for now)."""
 
+        log.info("XXXXXXXXXXXXXXXXX")
         # http://jinja.pocoo.org/docs/dev/templates/
 
         global releaselog
@@ -1502,7 +1539,7 @@ class ShowUnit (webapp2.RequestHandler):
         else:
             template = JINJA_ENVIRONMENT.get_template('fullReleasePage.tpl')
             mainroot = TypeHierarchyTree()
-            mainroot.traverseForHTML(Unit.GetUnit("Thing"), hashorslash="#term_", layers=layerlist)
+            mainroot.traverseForHTML2(Unit.GetUnit("Thing"), hashorslash="#term_", layers=layerlist)
             thing_tree = mainroot.toHTML()
             base_href = "/version/%s/" % requested_version
 

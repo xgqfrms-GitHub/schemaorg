@@ -7,11 +7,18 @@
     <link rel="stylesheet" type="text/css" href="/docs/schemaorg.css" />
     <link href="/docs/prettify.css" type="text/css" rel="stylesheet" />
     <script type="text/javascript" src="/docs/prettify.js"></script>
-    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
 
 <script type="text/javascript">
       $(document).ready(function(){
         prettyPrint();
+        setTimeout(function(){
+
+			$( ".extabs" ).tabs();
+  
+        }, 500);
         setTimeout(function(){
 
   $(".atn:contains(itemscope), .atn:contains(itemtype), .atn:contains(itemprop), .atn:contains(itemid), .atn:contains(time), .atn:contains(datetime), .atn:contains(datetime), .tag:contains(time) ").addClass('new');
@@ -24,15 +31,6 @@
   $('.new + .pun + .atv').addClass('curl');
 
         }, 500);
-        setTimeout(function() {
-          $('.ds-selector-tabs .selectors a').click(function() {
-            var $this = $(this);
-            var $p = $this.parents('.ds-selector-tabs');
-            $('.selected', $p).removeClass('selected');
-            $this.addClass('selected');
-            $('pre.' + $this.data('selects'), $p).addClass('selected');
-          });
-        }, 0);
       });
 </script>
 
